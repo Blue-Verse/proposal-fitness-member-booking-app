@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="피트니스 센터 통합 회원 관리·예약·소통 앱 구축 — 프로젝트 제안서" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link href="https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/variable/woff2/SUIT-Variable.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['SUIT Variable', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              600: '#0284c7',
+              700: '#0369a1'
+            }
+          },
+          boxShadow: {
+            soft: '0 10px 30px -18px rgba(15, 23, 42, 0.35)'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root { color-scheme: light; font-size: 16px; }
+    body {
+      font-family: 'SUIT Variable', sans-serif;
+      font-size: 1rem;
+      background-image:
+        radial-gradient(circle at 12% 18%, rgba(14, 165, 233, 0.08), transparent 42%),
+        radial-gradient(circle at 88% 82%, rgba(2, 132, 199, 0.06), transparent 48%);
+    }
+    .doc-content h1, .doc-content h2, .doc-content h3, .doc-content h4 {
+      color: rgb(15 23 42); font-weight: 700; letter-spacing: -0.01em;
+      line-height: 1.3; margin-top: 1.6em; margin-bottom: 0.7em;
+    }
+    .doc-content h1 { font-size: 2rem; margin-top: 0.2em; }
+    .doc-content h2 { font-size: 1.4rem; }
+    .doc-content h3 { font-size: 1.15rem; }
+    .doc-content p, .doc-content li {
+      color: rgb(51 65 85); line-height: 1.8; font-size: 1rem;
+    }
+    .doc-content p, .doc-content ul, .doc-content ol,
+    .doc-content table, .doc-content pre, .doc-content blockquote {
+      margin-bottom: 1rem;
+    }
+    .doc-content ul, .doc-content ol { padding-left: 1.2rem; }
+    .doc-content ul { list-style: disc; }
+    .doc-content ol { list-style: decimal; }
+    .doc-content table {
+      width: 100%; border-collapse: collapse;
+      border: 1px solid rgb(226 232 240); border-radius: 0.75rem;
+      overflow: hidden; font-size: 1rem;
+    }
+    .doc-content th, .doc-content td {
+      border: 1px solid rgb(226 232 240); padding: 0.7rem 0.8rem;
+      text-align: left; vertical-align: top;
+    }
+    .doc-content th {
+      background: rgb(248 250 252); color: rgb(30 41 59); font-weight: 600;
+    }
+    .doc-content pre, .doc-content code {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+    .doc-content pre {
+      background: rgb(15 23 42); color: rgb(226 232 240);
+      padding: 1rem; border-radius: 0.75rem; overflow-x: auto;
+      font-size: 1rem; line-height: 1.65;
+    }
+    .doc-content p code, .doc-content li code,
+    .doc-content td code, .doc-content th code {
+      background: rgb(241 245 249); color: rgb(15 23 42);
+      border: 1px solid rgb(226 232 240); border-radius: 0.4rem;
+      padding: 0.08rem 0.4rem; font-size: 1em;
+    }
+    .doc-content blockquote {
+      border-left: 3px solid rgb(14 165 233); padding-left: 0.85rem;
+      color: rgb(71 85 105); background: rgb(240 249 255);
+      border-radius: 0.5rem; padding-top: 0.55rem; padding-bottom: 0.55rem;
+    }
+    .text-xs { font-size: 1rem !important; }
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before {
+      content: ''; position: absolute; left: 0.6rem; top: 0.25rem; bottom: 0.25rem;
+      width: 2px; background: rgb(186 230 253);
+    }
+    .timeline-item { position: relative; margin-bottom: 1.75rem; }
+    .timeline-item::before {
+      content: ''; position: absolute; left: -1.65rem; top: 0.35rem;
+      width: 0.75rem; height: 0.75rem; border-radius: 50%;
+      background: rgb(2 132 199); border: 3px solid rgb(224 242 254);
+    }
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+    #sidebar-backdrop { display: none; }
+    #sidebar-backdrop.open { display: block; }
+    @media (max-width: 1023px) {
+      #sidebar { transform: translateX(-100%); transition: transform 0.2s ease; position: fixed; top: 0; left: 0; z-index: 40; height: 100vh; width: 80vw; max-width: 320px; }
+      #sidebar.open { transform: translateX(0); }
+    }
+  </style>
+  <title>피트니스 센터 통합 앱 구축 — 프로젝트 제안서</title>
+</head>
+<body class="text-slate-800 font-sans antialiased">
+  <div class="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
+
+    <header class="mb-6 rounded-2xl border border-slate-200/70 bg-white/85 px-5 py-3 shadow-soft backdrop-blur">
+      <div class="flex flex-wrap items-center gap-3">
+        <button id="sidebar-toggle" class="lg:hidden inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-sky-700">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          메뉴
+        </button>
+        <a href="#home" class="inline-flex items-center shrink-0 text-sm font-bold tracking-tight text-slate-800">
+          프로젝트 제안서
+        </a>
+        <div class="hidden sm:block ml-auto text-right">
+          <p class="text-sm font-semibold tracking-[0.04em] text-sky-700/90">피트니스 센터 통합 앱 구축</p>
+          <p class="text-xs text-slate-400">회원 관리 · 예약 · 소통 · 영상</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+
+      <div id="sidebar-backdrop" class="fixed inset-0 bg-black/30 z-30 lg:hidden" onclick="closeSidebar()"></div>
+      <aside id="sidebar" class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-soft backdrop-blur lg:sticky lg:top-6 lg:h-[calc(100vh-4rem)] lg:overflow-auto">
+        <nav id="nav" class="space-y-1">
+          <a href="#home" data-page="home" class="nav-link block rounded-xl border px-3 py-2 text-sm border-sky-200 bg-sky-50 font-medium text-sky-700">홈</a>
+          <div class="my-3 border-t border-slate-200"></div>
+          <p class="mb-2 mt-1 px-1 text-sm font-semibold tracking-[0.14em] text-slate-400">제안서</p>
+          <a href="#overview" data-page="overview" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">프로젝트 소개</a>
+          <a href="#estimate" data-page="estimate" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">견적서</a>
+          <a href="#manday" data-page="manday" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">공수계산서</a>
+          <a href="#prd" data-page="prd" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">PRD</a>
+          <div class="my-3 border-t border-slate-200"></div>
+          <p class="mb-2 mt-1 px-1 text-sm font-semibold tracking-[0.14em] text-slate-400">일정 &amp; 경험</p>
+          <a href="#timeline" data-page="timeline" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">일정 제안</a>
+          <a href="#portfolio" data-page="portfolio" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">유사 프로젝트 경험</a>
+        </nav>
+      </aside>
+
+      <main class="min-w-0">
+
+        <div id="page-home" class="page-section active space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-soft backdrop-blur md:p-8">
+            <p class="mb-2 text-xs font-semibold tracking-[0.2em] text-sky-700/80">프로젝트 제안서</p>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">피트니스 센터 통합 회원 관리 · 예약 · 소통 앱 구축</h1>
+            <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">피트니스 센터 운영에 필요한 회원 관리·예약·결제·영상 콘텐츠·1:1 소통 기능을 하나의 앱으로 통합합니다. Android/iOS 크로스플랫폼 앱과 관리자 웹을 120일 내 구축하여, 개인 메신저 의존 없는 공식 소통 채널과 체계적인 운동 콘텐츠 제공 구조를 마련합니다.</p>
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              <span class="inline-flex rounded-full border border-sky-200 bg-sky-100 px-2.5 py-1 text-sm font-semibold tracking-[0.12em] text-sky-700">13,500,000원 (VAT 별도)</span>
+              <span class="inline-flex rounded-full border border-sky-200 bg-sky-100 px-2.5 py-1 text-sm font-semibold tracking-[0.12em] text-sky-700">120일</span>
+              <span class="inline-flex rounded-full border border-amber-200 bg-amber-100 px-2.5 py-1 text-sm font-semibold tracking-[0.12em] text-amber-700">Android/iOS · 헬스케어</span>
+              <a href="https://www.wishket.com/project/154472/" target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-sm font-medium text-slate-500 transition hover:border-sky-300 hover:text-sky-700">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                원본 공고
+              </a>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <a href="#overview" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">소개</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">프로젝트 소개</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">프로젝트 분석, 핵심 요구사항 정리, 제안 포인트</p>
+            </a>
+            <a href="#estimate" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">비용</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">견적서</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">항목별 비용 산출 근거 및 상세 견적</p>
+            </a>
+            <a href="#manday" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">공수</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">공수계산서</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">기능별 개발 공수(man-day) 산출 내역</p>
+            </a>
+            <a href="#prd" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-amber-100 text-amber-700 border-amber-200">기획</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">PRD</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">기능 요구사항 정의서, 사용자 스토리, 기술 제약</p>
+            </a>
+            <a href="#timeline" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-amber-100 text-amber-700 border-amber-200">일정</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">일정 제안</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">단계별 마일스톤 및 산출물 일정표</p>
+            </a>
+            <a href="#portfolio" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-amber-100 text-amber-700 border-amber-200">경험</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">유사 프로젝트 경험</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">유사 프로젝트 수행 경험 및 기술 스택</p>
+            </a>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">13+</p>
+              <p class="mt-1 text-sm text-slate-500">완료 프로젝트</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">3건</p>
+              <p class="mt-1 text-sm text-slate-500">피트니스/헬스케어</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">5건</p>
+              <p class="mt-1 text-sm text-slate-500">크로스플랫폼 앱</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">120일</p>
+              <p class="mt-1 text-sm text-slate-500">제안 기간</p>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-sky-200/70 bg-gradient-to-br from-sky-50 to-brand-50 p-6 text-center shadow-soft md:p-10">
+            <h2 class="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">함께 만들어 가겠습니다</h2>
+            <p class="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">각 메뉴를 클릭하시면 상세 내용을 확인하실 수 있습니다.</p>
+          </div>
+        </div>
+
+        <div id="page-overview" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>프로젝트 소개</h1>
+              <blockquote>피트니스 센터 운영에 필요한 회원 관리·예약·결제·영상 콘텐츠·1:1 소통 기능을 하나의 앱으로 통합합니다.</blockquote>
+
+              <h2>프로젝트 개요</h2>
+              <table>
+                <tr><th>항목</th><th>내용</th></tr>
+                <tr><td>프로젝트명</td><td><a href="https://www.wishket.com/project/154472/" target="_blank" rel="noopener noreferrer" class="text-sky-700 underline decoration-sky-300 hover:decoration-sky-500">피트니스 센터 통합 회원 관리 및 예약 통합 앱 구축</a></td></tr>
+                <tr><td>카테고리</td><td>Android/iOS · 병원·헬스케어</td></tr>
+                <tr><td>제안 금액</td><td>13,500,000원 (VAT 별도)</td></tr>
+                <tr><td>제안 기간</td><td>120일</td></tr>
+                <tr><td>핵심 기술</td><td>Flutter, NestJS, PostgreSQL, WebSocket, FCM/APNs, AWS</td></tr>
+              </table>
+
+              <h2>핵심 요구사항 분석</h2>
+              <ul>
+                <li>회원 직접 예약/변경/취소가 가능한 1:1 수업 스케줄 기능 — 강사·관리자 전체 일정 관리 포함</li>
+                <li>수강권 구매·재연장을 위한 인앱 결제 (Google Play Billing, Apple IAP) 통합</li>
+                <li>공통 운동 영상 라이브러리 + 수업 후 개인별 복습 영상 전송 (강사 → 회원)</li>
+                <li>앱 내 1:1 채팅 — 영상·파일 전송 지원, 개인 메신저 대체하여 개인정보 노출 방지</li>
+                <li>회원 가입·로그인·정보 관리 등 기본 회원 기능</li>
+                <li>예약 확정/취소, 수업 리마인더, 채팅 수신 등 주요 푸시 알림</li>
+                <li>관리자 페이지 — 회원/스케줄/영상/공지/결제/통계 통합 관리</li>
+                <li>기존 외부 솔루션 + 네이버 예약 누적 회원 정보 안전 이전(마이그레이션)</li>
+              </ul>
+
+              <h2>제안 포인트</h2>
+              <h3>1. 피트니스·헬스케어 도메인 수행 경험</h3>
+              <p>필라테스 프랜차이즈 관리 앱(수업 예약/강사/결제/CRM, Android·iOS·Web 동시 출시), 시니어 주간보호 관리 플랫폼(실시간 케어 로그·전자서명·AI 분석) 등 유사 도메인 프로젝트를 풀스택으로 수행했습니다. 수업 예약, 출결, 결제, 강사-회원 커뮤니케이션 흐름을 이미 다수 구축한 경험을 기반으로 초기 시행착오를 최소화합니다.</p>
+
+              <h3>2. 크로스플랫폼(Flutter) + 관리자 웹 동시 구축</h3>
+              <p>Android/iOS 앱을 단일 코드베이스(Flutter)로 구축하고, 관리자 페이지는 Next.js 기반 웹으로 구성합니다. 하나의 백엔드(NestJS)를 공유해 기능별 중복 구현을 줄이고, 스토어 심사/빌드 주기와 웹 배포 주기를 병렬로 운영합니다.</p>
+
+              <h3>3. 개인정보 비노출형 1:1 채팅</h3>
+              <p>WebSocket 기반 실시간 채팅에 영상·파일 업로드, 읽음/전송 상태, 푸시 알림까지 포함해 개인 메신저를 완전히 대체합니다. 강사와 회원의 전화번호·개인 ID가 상호 노출되지 않도록 앱 내 식별자만으로 소통하게 설계합니다.</p>
+
+              <h3>4. 체계적인 운동 영상 콘텐츠 구조</h3>
+              <p>공통 영상 라이브러리는 카테고리·부위·난이도 기반 메타데이터로 관리하고, 개인 복습 영상은 강사가 앱에서 직접 업로드해 해당 회원에게만 노출되는 권한 구조로 설계합니다. 영상은 AWS S3 + CloudFront(HLS 스트리밍) 기반 안정적 재생을 보장합니다.</p>
+
+              <h3>5. 데이터 마이그레이션 전담 단계 편성</h3>
+              <p>외부 솔루션 및 네이버 예약에서 추출한 회원·수강권·예약 데이터를 사전 매핑 스크립트로 검증합니다. 실데이터 이관 전 2회 이상의 리허설(Dry-run)을 거쳐 누락·중복·오매핑 리스크를 차단하고, 이관 실패 시 롤백 절차까지 제공합니다.</p>
+
+              <h2>사용 기술 및 툴</h2>
+              <h3>개발 기술</h3>
+              <div class="flex flex-wrap gap-2 not-prose mb-4">
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Flutter</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Dart</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Riverpod</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">NestJS</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">TypeScript</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">PostgreSQL</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Redis</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Socket.IO</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">AWS S3</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">CloudFront (HLS)</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">FCM</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">APNs</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Google Play Billing</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Apple IAP</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Next.js</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">TailwindCSS</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Docker</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">GitHub Actions</span>
+              </div>
+              <h3>협업 및 커뮤니케이션</h3>
+              <div class="flex flex-wrap gap-2 not-prose">
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">Slack</span>
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">카카오톡</span>
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">Zoom</span>
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">Google Meet</span>
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">Notion</span>
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">GitHub Issues</span>
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">Figma</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div id="page-estimate" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>견적서</h1>
+              <blockquote>본 견적서는 프로젝트 요구사항 분석을 기반으로 산출되었습니다.</blockquote>
+
+              <h2>견적 요약</h2>
+              <table>
+                <tr><th>항목</th><th>내용</th></tr>
+                <tr><td>프로젝트명</td><td>피트니스 센터 통합 회원 관리 및 예약 통합 앱 구축</td></tr>
+                <tr><td>제안 금액</td><td><strong>13,500,000원 (VAT 별도)</strong></td></tr>
+                <tr><td>제안 기간</td><td>120일</td></tr>
+                <tr><td>견적 유효기간</td><td>제안일로부터 30일</td></tr>
+              </table>
+
+              <h2>상세 견적 내역</h2>
+              <table>
+                <thead>
+                  <tr><th>구분</th><th>항목</th><th>수량</th><th>단가</th><th>금액</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>기획</td><td>요구사항 정의서 / 기능 명세서 / 화면 설계서</td><td>1식</td><td>-</td><td>1,500,000원</td></tr>
+                  <tr><td>디자인</td><td>Figma UI/UX (앱 + 관리자 웹 전체)</td><td>1식</td><td>-</td><td>2,000,000원</td></tr>
+                  <tr><td>모바일 개발</td><td>Flutter 기반 Android/iOS 앱 (예약/결제/영상/채팅/푸시)</td><td>1식</td><td>-</td><td>3,800,000원</td></tr>
+                  <tr><td>관리자 웹 개발</td><td>Next.js 어드민 (회원/스케줄/영상/공지/결제/통계)</td><td>1식</td><td>-</td><td>1,500,000원</td></tr>
+                  <tr><td>백엔드 개발</td><td>NestJS API, DB 설계, 채팅 서버, 푸시, 인프라 구성</td><td>1식</td><td>-</td><td>3,300,000원</td></tr>
+                  <tr><td>데이터 이관 &amp; QA/배포</td><td>외부/네이버 예약 데이터 마이그레이션, 전체 QA, 스토어 배포</td><td>1식</td><td>-</td><td>1,400,000원</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr><th colspan="4">합계 (VAT 별도)</th><th>13,500,000원</th></tr>
+                </tfoot>
+              </table>
+
+              <h2>산정 근거</h2>
+              <ul>
+                <li>공고 제시 예산(15,000,000원) 범위 내 합리적 산정</li>
+                <li>Android/iOS 동시 개발 대비 Flutter 크로스플랫폼 채택으로 FE 공수 절감</li>
+                <li>하나의 백엔드(NestJS)를 앱·관리자 웹이 공유하여 중복 구현 방지</li>
+                <li>유사 프로젝트(필라테스 앱, 시니어 케어 플랫폼) 수행 경험 기반 효율적 개발</li>
+              </ul>
+
+              <h2>포함 사항</h2>
+              <ul>
+                <li>소스 코드 전체 이관 (앱 · 관리자 웹 · 백엔드)</li>
+                <li>개발 문서 (요구사항 정의서, 기능 명세서, 화면 설계서, API 명세서, DB 스키마, 배포 가이드)</li>
+                <li>Figma 디자인 원본 파일</li>
+                <li>1개월 무상 하자 보수 (출시일 기준)</li>
+                <li>배포 환경 세팅 1회 (AWS 인프라 + 앱 스토어 등록)</li>
+                <li>데이터 마이그레이션 스크립트 및 검증 리포트</li>
+              </ul>
+
+              <h2>불포함 사항</h2>
+              <ul>
+                <li>서버 호스팅/CDN 비용 (AWS, CloudFront 등 실사용 요금)</li>
+                <li>도메인 구매 비용</li>
+                <li>Apple Developer / Google Play Console 등록 비용</li>
+                <li>결제 PG 수수료 및 인앱결제 플랫폼 수수료</li>
+                <li>하자 보수 기간 이후 유지보수 및 추가 기능 개발</li>
+                <li>웨어러블/운동 센서 실시간 연동, AI 분석 등 범위 외 기능</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <div id="page-manday" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>공수계산서</h1>
+              <blockquote>기능별 개발 공수(Man-Day)를 산출하여 일정과 비용의 근거를 제시합니다.</blockquote>
+
+              <h2>공수 요약</h2>
+              <table>
+                <tr><th>구분</th><th>공수 (M/D)</th><th>비율</th></tr>
+                <tr><td>기획/설계</td><td>7 M/D</td><td>8%</td></tr>
+                <tr><td>Figma 디자인</td><td>10 M/D</td><td>12%</td></tr>
+                <tr><td>모바일 FE (Flutter)</td><td>22 M/D</td><td>26%</td></tr>
+                <tr><td>관리자 FE (Next.js)</td><td>9 M/D</td><td>11%</td></tr>
+                <tr><td>백엔드 개발</td><td>22 M/D</td><td>26%</td></tr>
+                <tr><td>데이터 마이그레이션</td><td>5 M/D</td><td>6%</td></tr>
+                <tr><td>DevOps/배포</td><td>5 M/D</td><td>6%</td></tr>
+                <tr><td>QA/버퍼</td><td>5 M/D</td><td>5%</td></tr>
+                <tr><th>합계</th><th>85 M/D</th><th>100%</th></tr>
+              </table>
+
+              <h2>기능별 상세 공수</h2>
+              <table>
+                <thead>
+                  <tr><th>기능</th><th>세부 작업</th><th>담당</th><th>공수 (M/D)</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td rowspan="2">사용자 인증</td><td>회원가입/로그인/소셜/비밀번호 찾기 API</td><td>백엔드</td><td>2</td></tr>
+                  <tr><td>로그인·회원가입·마이페이지 화면</td><td>모바일 FE</td><td>2</td></tr>
+                  <tr><td rowspan="2">회원 정보</td><td>내 정보/수강권/출석 API</td><td>백엔드</td><td>1.5</td></tr>
+                  <tr><td>마이페이지/수강권 UI</td><td>모바일 FE</td><td>2</td></tr>
+                  <tr><td rowspan="2">스케줄 예약</td><td>예약 생성/변경/취소 API, 강사별 가능 시간대 계산</td><td>백엔드</td><td>3</td></tr>
+                  <tr><td>캘린더 UI, 시간대 선택, 예약 히스토리</td><td>모바일 FE</td><td>4</td></tr>
+                  <tr><td rowspan="2">결제 (수강권)</td><td>Google Play Billing / Apple IAP 영수증 검증 API</td><td>백엔드</td><td>2</td></tr>
+                  <tr><td>수강권 구매·재연장 화면</td><td>모바일 FE</td><td>2.5</td></tr>
+                  <tr><td rowspan="2">공통 운동 영상</td><td>카테고리/태그 API, HLS URL 발급</td><td>백엔드</td><td>1.5</td></tr>
+                  <tr><td>영상 라이브러리 · 재생 UI</td><td>모바일 FE</td><td>2</td></tr>
+                  <tr><td rowspan="2">개인별 복습 영상</td><td>업로드/권한 검사 API, 회원 매칭</td><td>백엔드</td><td>2</td></tr>
+                  <tr><td>강사용 업로드 / 회원 수신함 UI</td><td>모바일 FE</td><td>2</td></tr>
+                  <tr><td rowspan="2">1:1 채팅</td><td>WebSocket 서버, 읽음/전송 상태, 파일 업로드 API</td><td>백엔드</td><td>3.5</td></tr>
+                  <tr><td>채팅 목록·대화창·영상/파일 전송 UI</td><td>모바일 FE</td><td>3</td></tr>
+                  <tr><td rowspan="2">푸시 알림</td><td>FCM/APNs 통합, 토픽·개인 구독 관리</td><td>백엔드</td><td>1.5</td></tr>
+                  <tr><td>알림 설정 UI, 디바이스 토큰 처리</td><td>모바일 FE</td><td>1</td></tr>
+                  <tr><td rowspan="2">공지사항</td><td>공지 CRUD API</td><td>백엔드</td><td>1</td></tr>
+                  <tr><td>공지 목록/상세 UI (앱+어드민)</td><td>FE</td><td>1.5</td></tr>
+                  <tr><td rowspan="2">관리자 페이지</td><td>관리자 전용 API (회원/스케줄/영상/결제/통계)</td><td>백엔드</td><td>2</td></tr>
+                  <tr><td>대시보드, 회원/스케줄/영상/공지/결제/통계 UI</td><td>관리자 FE</td><td>9</td></tr>
+                  <tr><td>데이터 마이그레이션</td><td>외부/네이버 예약 매핑 스크립트 + 2회 리허설 + 검증</td><td>백엔드</td><td>5</td></tr>
+                  <tr><td>기획/설계</td><td>요구사항 정의서, 기능 명세서, 화면 설계서</td><td>기획</td><td>7</td></tr>
+                  <tr><td>UI/UX 디자인</td><td>Figma 앱 + 관리자 화면</td><td>디자인</td><td>10</td></tr>
+                  <tr><td>DevOps / QA</td><td>인프라 세팅, CI/CD, 통합 QA, 스토어 배포</td><td>DevOps/QA</td><td>10</td></tr>
+                </tbody>
+              </table>
+
+              <h2>산정 기준</h2>
+              <ul>
+                <li>1 M/D = 8시간 기준 (1인 1일 작업량)</li>
+                <li>주 5일 근무 기준</li>
+                <li>버퍼 10~15% 포함</li>
+                <li>유사 프로젝트(필라테스 앱, 시니어 케어 플랫폼) 수행 경험 기반 효율적 개발</li>
+                <li>Android/iOS 동시 구현을 Flutter 단일 코드베이스로 대체하여 FE 공수 절감 반영</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <div id="page-prd" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>PRD (Product Requirements Document)</h1>
+              <blockquote>프로젝트 요구사항을 정의하고 기능 범위를 명확히 합니다.</blockquote>
+
+              <h2>1. 프로젝트 배경 및 목적</h2>
+              <p>회원 관리, 예약, 소통 채널을 하나로 통합하는 센터 전용 모바일 앱을 구축해 운영 효율성을 극대화하고 전문적인 서비스를 제공합니다. 앱 내 공식 소통 창구를 통해 회원-강사 간 불필요한 개인 정보 노출을 방지하고, 체계적인 운동 영상 콘텐츠를 제공하여 회원 만족도를 높이는 것을 목표로 합니다.</p>
+
+              <h2>2. 사용자 정의</h2>
+              <table>
+                <thead>
+                  <tr><th>사용자 유형</th><th>설명</th><th>주요 기능</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>회원</td><td>센터에 등록된 회원. 앱 주 사용자</td><td>수업 예약/변경/취소, 수강권 결제, 공통·개인 영상 시청, 강사와 1:1 채팅, 푸시 수신</td></tr>
+                  <tr><td>강사</td><td>센터 소속 강사. 회원과 1:1 수업 진행</td><td>본인 스케줄 확인, 예약 승인/거절, 개인 복습 영상 전송, 회원 1:1 채팅</td></tr>
+                  <tr><td>관리자</td><td>센터 운영자. 전체 운영 관리</td><td>회원/강사 정보 관리, 전체 스케줄 조회·강사 할당, 공통/개인 영상 관리, 공지, 결제 내역, 이용 통계</td></tr>
+                </tbody>
+              </table>
+
+              <h2>3. 기능 요구사항</h2>
+
+              <h3>3.1 회원 관리 &amp; 인증</h3>
+              <ul>
+                <li><strong>[필수]</strong> 이메일·비밀번호 회원가입 / 로그인 / 비밀번호 찾기</li>
+                <li><strong>[필수]</strong> 내 정보 수정, 프로필 이미지 등록</li>
+                <li><strong>[필수]</strong> 회원 탈퇴 및 개인정보 처리방침 동의</li>
+                <li><strong>[선택]</strong> 소셜 로그인 (Google, Apple) — 필요 시 협의</li>
+              </ul>
+
+              <h3>3.2 스케줄 예약 관리</h3>
+              <ul>
+                <li><strong>[필수]</strong> 회원이 강사별 가능 시간대에서 1:1 수업을 직접 예약</li>
+                <li><strong>[필수]</strong> 예약 변경·취소 (센터 정책 기반 가능 시간 제한)</li>
+                <li><strong>[필수]</strong> 강사는 본인 스케줄 전체 조회, 예약 승인/거절</li>
+                <li><strong>[필수]</strong> 관리자는 전체 예약 현황 조회 및 강사별 스케줄 할당</li>
+              </ul>
+
+              <h3>3.3 결제 (수강권)</h3>
+              <ul>
+                <li><strong>[필수]</strong> 인앱 결제 — Google Play Billing (Android) / Apple IAP (iOS)</li>
+                <li><strong>[필수]</strong> 수강권 구매·재연장 (회차/기간제)</li>
+                <li><strong>[필수]</strong> 결제 영수증 서버 검증 및 수강권 자동 부여</li>
+              </ul>
+
+              <h3>3.4 운동 영상 콘텐츠</h3>
+              <ul>
+                <li><strong>[필수]</strong> 공통 운동 영상 라이브러리 (카테고리/부위/난이도 필터)</li>
+                <li><strong>[필수]</strong> 외부 유튜브 영상 링크 등록 및 앱 내 재생</li>
+                <li><strong>[필수]</strong> 센터 자체 영상은 S3 + CloudFront HLS 스트리밍</li>
+                <li><strong>[필수]</strong> 강사가 수업 후 개인 복습 영상을 촬영·업로드 → 해당 회원에게만 노출</li>
+              </ul>
+
+              <h3>3.5 1:1 채팅 (개인 메신저 대체)</h3>
+              <ul>
+                <li><strong>[필수]</strong> 회원-강사 1:1 채팅 (WebSocket 실시간)</li>
+                <li><strong>[필수]</strong> 텍스트, 이미지, 영상, 파일 전송 지원</li>
+                <li><strong>[필수]</strong> 읽음 상태, 전송 상태 표시</li>
+                <li><strong>[필수]</strong> 개인 전화번호·카카오톡 ID 등 비공개 — 앱 내 식별자만 사용</li>
+              </ul>
+
+              <h3>3.6 푸시 알림</h3>
+              <ul>
+                <li><strong>[필수]</strong> 예약 확정/취소 알림</li>
+                <li><strong>[필수]</strong> 수업 리마인더 (수업 전 N시간)</li>
+                <li><strong>[필수]</strong> 채팅 메시지 수신 알림</li>
+                <li><strong>[필수]</strong> 공지사항 등록 알림</li>
+                <li><strong>[필수]</strong> 알림 수신 on/off 설정</li>
+              </ul>
+
+              <h3>3.7 관리자 페이지 (웹)</h3>
+              <ul>
+                <li><strong>[필수]</strong> 회원 정보 통합 관리 (조회/수정, 수강권 잔여 확인)</li>
+                <li><strong>[필수]</strong> 전체 예약 스케줄 관리 및 강사별 스케줄 할당</li>
+                <li><strong>[필수]</strong> 공통/개인별 영상 콘텐츠 업로드 및 관리</li>
+                <li><strong>[필수]</strong> 공지사항 등록 및 관리</li>
+                <li><strong>[필수]</strong> 결제 내역 및 기본 서비스 이용 통계 (일/주/월 예약 수, 활성 회원 수, 매출)</li>
+              </ul>
+
+              <h3>3.8 데이터 마이그레이션</h3>
+              <ul>
+                <li><strong>[필수]</strong> 기존 외부 솔루션 + 네이버 예약 회원 정보 → 신규 시스템 이전</li>
+                <li><strong>[필수]</strong> 매핑 스크립트 작성 + 2회 이상 Dry-run 리허설</li>
+                <li><strong>[필수]</strong> 이관 전/후 데이터 건수·키 무결성 검증 리포트 제공</li>
+                <li><strong>[필수]</strong> 실패 시 롤백 절차 수립</li>
+              </ul>
+
+              <h2>4. 비기능 요구사항</h2>
+              <table>
+                <thead>
+                  <tr><th>항목</th><th>요구사항</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>성능</td><td>주요 API p95 응답 300ms 이내, 영상 첫 프레임 재생 3초 이내</td></tr>
+                  <tr><td>보안</td><td>HTTPS, JWT + Refresh Token, 개인정보 AES 암호화, 결제 영수증 서버 검증, 파일 다운로드 권한 검사</td></tr>
+                  <tr><td>확장성</td><td>회원 1만명, 동시 채팅 세션 500건 수준 대응 가능한 아키텍처</td></tr>
+                  <tr><td>가용성</td><td>업무시간(06~24시) 99.5% 이상 가용성</td></tr>
+                  <tr><td>개인정보</td><td>개인정보보호법 준수, 회원-강사 상호 전화번호/개인 ID 비공개</td></tr>
+                  <tr><td>접근성</td><td>시니어 회원 고려 — 최소 폰트 14pt, 터치 영역 44pt 이상</td></tr>
+                </tbody>
+              </table>
+
+              <h2>5. 기술 제약사항</h2>
+              <ul>
+                <li>Google Play / Apple App Store 정책상 디지털 콘텐츠(수강권)는 인앱 결제 의무</li>
+                <li>지원 OS 버전: iOS 15+ / Android 8.0+ (API 26+)</li>
+                <li>네이버 예약 공식 마이그레이션 API 미공개 → CSV/엑셀 export 기반 이관</li>
+                <li>영상 저장·CDN 트래픽 등 인프라 운영비는 클라이언트 계정으로 별도 청구</li>
+                <li>앱 스토어 심사 지연(통상 1~7일)은 일정 외 변수로 존재</li>
+              </ul>
+
+              <h2>6. 범위 외 사항 (Out of Scope)</h2>
+              <ul>
+                <li>웨어러블/운동 센서 기기 실시간 연동 (추후 고도화 단계)</li>
+                <li>생체 데이터(심박·체지방·칼로리) 분석 및 시각화</li>
+                <li>AI 기반 운동 코칭/자세 교정</li>
+                <li>웹 앱 (본 프로젝트는 모바일 앱 + 관리자 웹만)</li>
+                <li>다국어 지원 (한국어 우선, 추후 확장 별건)</li>
+                <li>센터 간 다중 지점 멀티테넌트 구조 (단일 센터 기준)</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <div id="page-timeline" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>일정 제안</h1>
+              <blockquote>총 120일 기준 단계별 마일스톤 및 산출물을 제안합니다.</blockquote>
+
+              <h2>전체 일정 요약</h2>
+              <table>
+                <thead>
+                  <tr><th>단계</th><th>기간</th><th>주요 산출물</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Phase 1 · 기획/설계 &amp; 디자인</td><td>Day 1–28</td><td>요구사항 정의서, 기능 명세서, 화면 설계서, Figma 시안</td></tr>
+                  <tr><td>Phase 2 · 백엔드 기반 구축</td><td>Day 29–56</td><td>DB 스키마, Auth, 회원/스케줄/결제 API, 인프라 세팅</td></tr>
+                  <tr><td>Phase 3 · 모바일 앱 핵심 기능</td><td>Day 57–84</td><td>예약, 결제, 공통 영상, 푸시 알림 구현 (알파 빌드)</td></tr>
+                  <tr><td>Phase 4 · 채팅/복습 영상/관리자 페이지</td><td>Day 85–105</td><td>1:1 채팅, 개인 복습 영상, 관리자 웹 (베타 빌드)</td></tr>
+                  <tr><td>Phase 5 · 데이터 이관 / QA / 스토어 배포</td><td>Day 106–120</td><td>네이버 데이터 마이그레이션, 전체 QA, Android/iOS 스토어 런칭</td></tr>
+                </tbody>
+              </table>
+            </article>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <h2 class="mb-4 text-sm font-semibold tracking-[0.14em] text-slate-500">상세 타임라인</h2>
+            <div class="timeline">
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-sky-700">PHASE 1</p>
+                <h4 class="text-base font-semibold text-slate-900">기획/설계 &amp; 디자인</h4>
+                <p class="mb-1 text-sm font-semibold text-amber-600">Day 1–28 (약 4주)</p>
+                <p class="text-sm leading-7 text-slate-600">요구사항 상세 정의, 기능 명세서 확정, 화면 설계, Figma UI/UX 전체 시안 작성</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: 요구사항 정의서, 기능 명세서, 화면 설계서, ERD, Figma 시안</li>
+                </ul>
+              </div>
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-sky-700">PHASE 2</p>
+                <h4 class="text-base font-semibold text-slate-900">백엔드 기반 구축</h4>
+                <p class="mb-1 text-sm font-semibold text-amber-600">Day 29–56 (약 4주)</p>
+                <p class="text-sm leading-7 text-slate-600">NestJS 프로젝트 구성, DB 스키마 구축, 인증/회원/스케줄/결제 API 구현, AWS 인프라 세팅, CI/CD 구축</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: API 명세서, DB 스키마, 개발/스테이징 인프라, Auth/회원/예약/결제 API</li>
+                </ul>
+              </div>
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-sky-700">PHASE 3</p>
+                <h4 class="text-base font-semibold text-slate-900">모바일 앱 핵심 기능 구현</h4>
+                <p class="mb-1 text-sm font-semibold text-amber-600">Day 57–84 (약 4주)</p>
+                <p class="text-sm leading-7 text-slate-600">Flutter 앱에서 회원가입, 예약, 결제, 공통 영상 시청, 푸시 알림 구현. 내부 알파 빌드 배포</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: Android/iOS 알파 APK/IPA, TestFlight/Play 내부 테스트 배포</li>
+                </ul>
+              </div>
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-sky-700">PHASE 4</p>
+                <h4 class="text-base font-semibold text-slate-900">채팅/복습 영상/관리자 페이지</h4>
+                <p class="mb-1 text-sm font-semibold text-amber-600">Day 85–105 (약 3주)</p>
+                <p class="text-sm leading-7 text-slate-600">1:1 실시간 채팅(파일/영상 전송), 개인 복습 영상 업로드·수신, 관리자 페이지(회원/스케줄/영상/공지/결제/통계) 구현</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: 베타 빌드, 관리자 페이지 v1, 전체 기능 통합 QA 진입</li>
+                </ul>
+              </div>
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-sky-700">PHASE 5</p>
+                <h4 class="text-base font-semibold text-slate-900">데이터 이관 · QA · 스토어 배포</h4>
+                <p class="mb-1 text-sm font-semibold text-amber-600">Day 106–120 (약 2주)</p>
+                <p class="text-sm leading-7 text-slate-600">외부 솔루션/네이버 예약 데이터 Dry-run 2회 후 실이관, 전체 QA(회귀/성능/보안), Android/iOS 앱 스토어 심사 및 런칭, 배포 가이드 인계</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: 마이그레이션 검증 리포트, QA 리포트, 스토어 배포 완료, 운영/배포 가이드 문서</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h2>마일스톤 체크포인트</h2>
+              <table>
+                <thead>
+                  <tr><th>마일스톤</th><th>시점</th><th>검수 기준</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>M1 · 설계 승인</td><td>Day 28</td><td>Figma 시안 + 기능 명세서 서면 승인</td></tr>
+                  <tr><td>M2 · 백엔드 API 1차 완료</td><td>Day 56</td><td>Auth/회원/예약/결제 API 통합 테스트 통과, Swagger 문서 제공</td></tr>
+                  <tr><td>M3 · 앱 알파 빌드</td><td>Day 84</td><td>TestFlight / Play 내부 테스트 배포, 핵심 플로우(예약→결제→영상 시청) 시연</td></tr>
+                  <tr><td>M4 · 채팅/관리자 베타</td><td>Day 105</td><td>전체 기능 통합 QA 진입, 사용자 시나리오 기반 시연</td></tr>
+                  <tr><td>M5 · 스토어 런칭</td><td>Day 120</td><td>Android/iOS 스토어 정식 출시 + 데이터 마이그레이션 검증 완료</td></tr>
+                </tbody>
+              </table>
+
+              <h2>커뮤니케이션 계획</h2>
+              <table>
+                <tr><th>항목</th><th>방식</th><th>주기</th></tr>
+                <tr><td>일일 진행 공유</td><td>Slack / 카카오톡</td><td>매일</td></tr>
+                <tr><td>주간 미팅</td><td>Zoom / Google Meet</td><td>주 1회</td></tr>
+                <tr><td>마일스톤 리뷰</td><td>화면 공유 + 문서</td><td>단계 완료 시</td></tr>
+                <tr><td>이슈 트래킹</td><td>GitHub Issues</td><td>상시</td></tr>
+                <tr><td>베타 빌드 공유</td><td>TestFlight / Play Console 내부 테스트</td><td>Phase 3·4 종료 시</td></tr>
+              </table>
+            </article>
+          </div>
+        </div>
+
+        <div id="page-portfolio" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>유사 프로젝트 경험</h1>
+              <blockquote>본 프로젝트와 유사한 기능·기술 스택·도메인의 수행 경험을 소개합니다.</blockquote>
+            </article>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">13+</p>
+              <p class="mt-1 text-sm text-slate-500">완료 프로젝트</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">3건</p>
+              <p class="mt-1 text-sm text-slate-500">피트니스/헬스케어</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">5건</p>
+              <p class="mt-1 text-sm text-slate-500">크로스플랫폼 앱</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">~50K</p>
+              <p class="mt-1 text-sm text-slate-500">앱 프로젝트 평균 LOC</p>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft backdrop-blur md:p-8">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">B2B2C · 피트니스 · O2O</div>
+              <h3 class="text-lg font-semibold tracking-tight text-slate-900">필라테스 프랜차이즈 관리 앱</h3>
+              <p class="mt-1 text-sm text-slate-400">피트니스 / 2019.09–2019.12 (4개월) · 참여율 100%</p>
+              <div class="mt-3 doc-content">
+                <h4>프로젝트 개요</h4>
+                <p>필라테스 프랜차이즈의 수업 예약, 강사 관리, 출결, 결제, CRM, 커뮤니티 기능을 포함한 Android/iOS/Web 동시 출시 프로젝트.</p>
+                <h4>핵심 기능</h4>
+                <ul>
+                  <li>수업 예약 / 강사 스케줄 관리 / 출결 관리</li>
+                  <li>결제 및 수강권 운영</li>
+                  <li>회원 CRM, 커뮤니티, 3 플랫폼 동시 배포</li>
+                </ul>
+                <h4>본 프로젝트와의 유사점</h4>
+                <ul>
+                  <li>피트니스 센터 도메인과 회원·강사·수업 예약 데이터 모델 동일</li>
+                  <li>인앱 결제·수강권 운영 등 공고 요구사항과 직결</li>
+                  <li>Android/iOS 동시 출시 경험 → 앱 스토어 심사/배포 프로세스 숙달</li>
+                </ul>
+                <h4>기술 스택</h4>
+                <div class="flex flex-wrap gap-1.5 not-prose">
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">React Native</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">React</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Node.js</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">JavaScript</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft backdrop-blur md:p-8">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">B2B SaaS · 헬스케어</div>
+              <h3 class="text-lg font-semibold tracking-tight text-slate-900">시니어 주간보호 관리 플랫폼</h3>
+              <p class="mt-1 text-sm text-slate-400">헬스케어 · 2025 (약 6개월) · 참여율 100%</p>
+              <div class="mt-3 doc-content">
+                <h4>프로젝트 개요</h4>
+                <p>시니어 주간보호 센터의 케어 로그, 투약, 보호자 소통, 전자서명, 관리자 페이지를 포함한 멀티플랫폼(Flutter 앱 + Next.js 관리자) B2B SaaS.</p>
+                <h4>핵심 기능</h4>
+                <ul>
+                  <li>케어 로그·투약 관리, 보호자 커뮤니케이션</li>
+                  <li>AI 건강 분석(OpenAI), 전자서명</li>
+                  <li>멀티테넌트 아키텍처, 6 플랫폼 지원 (앱+웹+관리자)</li>
+                </ul>
+                <h4>본 프로젝트와의 유사점</h4>
+                <ul>
+                  <li>Flutter 앱 + Next.js 관리자 페이지 조합이 본 프로젝트와 구조적으로 동일</li>
+                  <li>NestJS 백엔드, AWS 기반 인프라 구성 동일</li>
+                  <li>실시간 커뮤니케이션, 푸시 알림, 사용자 권한 분리(회원/강사/관리자) 구조 경험</li>
+                </ul>
+                <h4>기술 스택</h4>
+                <div class="flex flex-wrap gap-1.5 not-prose">
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Flutter</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">NestJS</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Next.js</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">TypeScript</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">MySQL</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">AWS CDK</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Docker</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft backdrop-blur md:p-8">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">B2C 앱 · 일정·소셜</div>
+              <h3 class="text-lg font-semibold tracking-tight text-slate-900">소셜 캘린더 앱 (Calendar Share)</h3>
+              <p class="mt-1 text-sm text-slate-400">모바일 앱 · 2025.01~ · 참여율 100%</p>
+              <div class="mt-3 doc-content">
+                <h4>프로젝트 개요</h4>
+                <p>Flutter 기반 Android/iOS 앱. 소셜+캘린더 융합 UX, 듀얼 백엔드(Firebase+Supabase), 7종 푸시 알림, QR 오프라인 디스커버리 기능을 갖춘 MVP.</p>
+                <h4>핵심 기능</h4>
+                <ul>
+                  <li>캘린더·일정 등록 및 관리 UI</li>
+                  <li>소셜 피드, 좋아요 → 일정 자동 추가</li>
+                  <li>7종 푸시 알림, 실시간 동기화</li>
+                </ul>
+                <h4>본 프로젝트와의 유사점</h4>
+                <ul>
+                  <li>Flutter 단일 코드베이스로 Android/iOS 동시 배포 경험 — 본 프로젝트 스택 일치</li>
+                  <li>예약·일정 UX (시간대 선택, 캘린더 뷰, 충돌 방지) 구현 경험</li>
+                  <li>푸시 알림(FCM), 실시간 동기화 등 공통 인프라 경험</li>
+                </ul>
+                <h4>기술 스택</h4>
+                <div class="flex flex-wrap gap-1.5 not-prose">
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Flutter 3</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Firebase</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Supabase</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">FCM</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-sky-200/70 bg-gradient-to-br from-sky-50 to-brand-50 p-6 text-center shadow-soft md:p-10">
+            <h2 class="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">함께 만들어 가겠습니다</h2>
+            <p class="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">프로젝트에 대해 더 자세한 논의를 원하시면 미팅을 신청해 주세요.</p>
+          </div>
+        </div>
+
+        <div id="page-nav" class="mt-6 flex items-center justify-between gap-4" style="display:none;">
+          <a id="nav-prev" href="#home"
+             class="group flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/90 px-5 py-3 shadow-soft backdrop-blur transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+            <svg class="w-5 h-5 text-slate-400 transition group-hover:text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            <span>
+              <span class="block text-xs text-slate-400">이전</span>
+              <span id="nav-prev-label" class="block text-sm font-semibold text-slate-700 group-hover:text-sky-700">홈</span>
+            </span>
+          </a>
+          <a id="nav-next" href="#overview"
+             class="group flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/90 px-5 py-3 shadow-soft backdrop-blur transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white text-right ml-auto">
+            <span>
+              <span class="block text-xs text-slate-400">다음</span>
+              <span id="nav-next-label" class="block text-sm font-semibold text-slate-700 group-hover:text-sky-700">프로젝트 소개</span>
+            </span>
+            <svg class="w-5 h-5 text-slate-400 transition group-hover:text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+
+      </main>
+    </div>
+
+    <footer class="mt-10 border-t border-slate-200 pt-6 text-xs text-slate-500">
+      &copy; 2026 &middot; 본 제안서는 피트니스 센터 통합 회원 관리 및 예약 통합 앱 구축 프로젝트를 위해 작성되었습니다.
+    </footer>
+  </div>
+
+  <script>
+    const pages = ['home', 'overview', 'estimate', 'manday', 'prd', 'timeline', 'portfolio'];
+    const pageLabels = {
+      home: '홈', overview: '프로젝트 소개', estimate: '견적서',
+      manday: '공수계산서', prd: 'PRD', timeline: '일정 제안', portfolio: '유사 프로젝트 경험'
+    };
+
+    function navigate(pageId) {
+      if (!pages.includes(pageId)) pageId = 'home';
+      document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('page-' + pageId);
+      if (target) target.classList.add('active');
+      document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.dataset.page === pageId) {
+          link.className = 'nav-link block rounded-xl border px-3 py-2 text-sm border-sky-200 bg-sky-50 font-medium text-sky-700';
+        } else {
+          link.className = 'nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900';
+        }
+      });
+      updatePageNav(pageId);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      closeSidebar();
+    }
+
+    function updatePageNav(pageId) {
+      const nav = document.getElementById('page-nav');
+      const idx = pages.indexOf(pageId);
+      const prevBtn = document.getElementById('nav-prev');
+      const nextBtn = document.getElementById('nav-next');
+      const prevLabel = document.getElementById('nav-prev-label');
+      const nextLabel = document.getElementById('nav-next-label');
+
+      nav.style.display = (pageId === 'home') ? 'none' : 'flex';
+
+      if (idx > 0) {
+        prevBtn.href = '#' + pages[idx - 1];
+        prevLabel.textContent = pageLabels[pages[idx - 1]];
+        prevBtn.style.visibility = 'visible';
+      } else {
+        prevBtn.style.visibility = 'hidden';
+      }
+
+      if (idx < pages.length - 1) {
+        nextBtn.href = '#' + pages[idx + 1];
+        nextLabel.textContent = pageLabels[pages[idx + 1]];
+        nextBtn.style.visibility = 'visible';
+      } else {
+        nextBtn.style.visibility = 'hidden';
+      }
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebar-backdrop').classList.remove('open');
+    }
+
+    function handleHash() {
+      const hash = (location.hash || '#home').replace('#', '');
+      navigate(hash);
+    }
+    window.addEventListener('hashchange', handleHash);
+    window.addEventListener('DOMContentLoaded', handleHash);
+
+    document.getElementById('sidebar-toggle').addEventListener('click', function() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebar-backdrop').classList.toggle('open');
+    });
+  </script>
+</body>
+</html>
